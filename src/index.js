@@ -34,7 +34,8 @@ const tasksReducer = (state = initialState, action) => {
 }
 
 /**
- * Action creator, Action を生成する。
+ * Action creator, ユーザーからのAction を生成する。
+ * Action は reducer で利用する。
  * Action のテストを行いやすくする効果もある。
  * @param {*} task 
  * @returns 
@@ -63,15 +64,15 @@ const updateTaskInput = (taskInput) => (
  */
 const store = createStore(tasksReducer);
 
+
 // store へのアクセスは dispatch に Action を渡す。
 store.dispatch(addTask('初期：猫にごはんをあげる。'));
-
 // getState で中身を確認する。
 console.log(store.getState());
 
 
 /**
- * Todo App の本体
+ * Todo App の画面を定義する。
  * @param {*} param0 
  * @returns 
  */
@@ -94,18 +95,17 @@ const TodoApp = ({store}) => {
 }
 
 
+// React のレンダリング先を定義する。
 const root = ReactDOM.createRoot(document.getElementById('root'));
-
 /**
  * TodoApp の 描画を開始する。
  * @param {*} store 
- */
+*/
 const renderApp = (store) => {
   root.render (
     <TodoApp store = {store}/>
   )
 }
-
 
 // store の更新が完了した後に行う処理(再描画)
 // react-redux ライブラリ無しなので、こちらを利用する
