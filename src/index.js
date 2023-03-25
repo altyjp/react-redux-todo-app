@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
 import { legacy_createStore as createStore} from 'redux'
 
+
 const initialState = {
+  taskInput : '',
   tasks: []
 }
 
@@ -23,6 +23,11 @@ const tasksReducer = (state = initialState, action) => {
         ...state,
         tasks : state.tasks.concat([action.payload.task])
       };
+    case 'UPDATE_TASK_INPUT':
+      return {
+        ...state,
+        taskInput : action.payload.taskInput
+      }
     default:
       return state;
   }
@@ -44,25 +49,67 @@ const addTask = (task) => (
   }
 );
 
+const updateTaskInput = (taskInput) => (
+  {
+    type : 'UPDATE_TASK_INPUT',
+    payload : {
+      taskInput
+    }
+  }
+);
+
 /**
  * store, アプリケーションで唯一であり、すべての情報を集約する。
  */
 const store = createStore(tasksReducer);
 
 // store へのアクセスは dispatch に Action を渡す。
-store.dispatch(addTask('猫にごはんをあげる。'));
+store.dispatch(addTask('初期：猫にごはんをあげる。'));
 
 // getState で中身を確認する。
 console.log(store.getState());
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+/**
+ * Todo App の本体
+ * @param {*} param0 
+ * @returns 
+ */
+const TodoApp = ({store}) => {
+  const {taskInput, tasks} = store.getState();
+  return (
+    <div class='main'>
+      <h1>ToDo App</h1>
+      <input type='text' onChange={(e) => store.dispatch(updateTaskInput(e.target.value))} />
+      <button onClick={() => store.dispatch(addTask(taskInput))} >追加</button>
+      <ul>
+        {
+          tasks.map((item, i) => {
+            return <li key={i}>{item}</li>
+          })
+        }
+      </ul>
+    </div>
+  )
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+
+/**
+ * TodoApp の 描画を開始する。
+ * @param {*} store 
+ */
+const renderApp = (store) => {
+  root.render (
+    <TodoApp store = {store}/>
+  )
+}
+
+
+// store の更新が完了した後に行う処理(再描画)
+// react-redux ライブラリ無しなので、こちらを利用する
+store.subscribe(() => renderApp(store));
+
+// 初期描画開始
+renderApp(store);
