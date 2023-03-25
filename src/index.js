@@ -2,11 +2,15 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { legacy_createStore as createStore} from 'redux'
+import { connect, Provider } from 'react-redux';
 
 
+/**
+ * 画面で利用するパラメータの初期値定義
+ */
 const initialState = {
-  taskInput : '',
-  tasks: []
+  taskInput : '', // Todo の テキスト入力欄を定義する
+  tasks: [] // 入力した Todoを保持する配列
 }
 
 /**
@@ -64,7 +68,7 @@ const updateTaskInput = (taskInput) => (
  */
 const store = createStore(tasksReducer);
 
-
+// redux の基本
 // store へのアクセスは dispatch に Action を渡す。
 store.dispatch(addTask('初期：猫にごはんをあげる。'));
 // getState で中身を確認する。
@@ -72,17 +76,24 @@ console.log(store.getState());
 
 
 /**
+ * Presentational Component,
  * Todo App の画面を定義する。
+ * react-redux の効果により、外部から値を受け取るだけで動作するようになった。
  * @param {*} param0 
  * @returns 
  */
-const TodoApp = ({store}) => {
-  const {taskInput, tasks} = store.getState();
+const TodoApp = ({
+  tasks,
+  taskInput,
+  updateTaskInputInContainer,
+  addTaskInContainer
+}) => {
+
   return (
-    <div class='main'>
+    <div className='main'>
       <h1>ToDo App</h1>
-      <input type='text' onChange={(e) => store.dispatch(updateTaskInput(e.target.value))} />
-      <button onClick={() => store.dispatch(addTask(taskInput))} >追加</button>
+      <input type='text' onChange={(e) => updateTaskInputInContainer(e.target.value)} />
+      <button onClick={() => addTaskInContainer(taskInput)} >追加</button>
       <ul>
         {
           tasks.map((item, i) => {
@@ -94,6 +105,30 @@ const TodoApp = ({store}) => {
   )
 }
 
+/**
+ * react-redux ライブラリ編
+ * Container component, TodoApp の画面と state, dispatch を紐づける
+ */
+// store -> 画面, 画面で利用するパラメータの map
+const mapStateToProps = ({taskInput, tasks}) => {
+  return {taskInput, tasks};
+}
+
+// 画面 -> store, 画面からstoreを更新するためのmap
+const mapDispatchToProps = (dispatch) => {
+  return {
+    addTaskInContainer(task) {
+      dispatch(addTask(task));
+    },
+    updateTaskInputInContainer(taskInput) {
+      dispatch(updateTaskInput(taskInput));
+    }
+  }
+}
+// connect関数で mapStateToProps, mapDispatchToProps を TodoApp に紐づける
+// DIっぽいように見える
+const TodoAppContainer = connect(mapStateToProps, mapDispatchToProps)(TodoApp);
+
 
 // React のレンダリング先を定義する。
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -103,13 +138,11 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 */
 const renderApp = (store) => {
   root.render (
-    <TodoApp store = {store}/>
+    <Provider store={store} >
+      <TodoAppContainer />
+    </Provider>
   )
 }
-
-// store の更新が完了した後に行う処理(再描画)
-// react-redux ライブラリ無しなので、こちらを利用する
-store.subscribe(() => renderApp(store));
 
 // 初期描画開始
 renderApp(store);
